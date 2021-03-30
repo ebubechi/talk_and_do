@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:talk_and_do/text_to_speech.dart';
 
 // void main() => runApp(Speech2Text());
 
@@ -28,6 +29,7 @@ class _Speech2TextState extends State<Speech2Text> {
 
   @override
   void initState() {
+    initSpeechState();
     super.initState();
   }
 
@@ -54,83 +56,86 @@ class _Speech2TextState extends State<Speech2Text> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('Speech to Text Example'),
-        ),
-        body: Column(children: [
-          Center(
-            child: Text(
-              'Speech recognition available',
-              style: TextStyle(fontSize: 22.0),
+          backgroundColor: Colors.white,
+          elevation: 0.0,
+          title: Center(
+            child: const Text(
+              'Speech to Text Example',
+              style: TextStyle(color: Colors.redAccent),
             ),
           ),
+        ),
+        body: Column(children: [
           Container(
-            child: Column(
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    FlatButton(
-                      child: Text('Initialize'),
-                      onPressed: _hasSpeech ? null : initSpeechState,
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    FlatButton(
-                      child: Text('Start'),
-                      onPressed: !_hasSpeech || speech.isListening
-                          ? null
-                          : startListening,
-                    ),
-                    FlatButton(
-                      child: Text('Stop'),
-                      onPressed: speech.isListening ? stopListening : null,
-                    ),
-                    FlatButton(
-                      child: Text('Cancel'),
-                      onPressed: speech.isListening ? cancelListening : null,
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    DropdownButton(
-                      onChanged: (selectedVal) => _switchLang(selectedVal),
-                      value: _currentLocaleId,
-                      items: _localeNames
-                          .map(
-                            (localeName) => DropdownMenuItem(
-                              value: localeName.localeId,
-                              child: Text(localeName.name),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                )
-              ],
-            ),
+            // child: Column(
+            //   children: <Widget>[
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                //   children: <Widget>[
+                //     FlatButton(
+                //       child: Text('Initialize'),
+                //       onPressed: _hasSpeech ? null : initSpeechState,
+                //     ),
+                //   ],
+                // ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                //   children: <Widget>[
+                //     FlatButton(
+                //       child: Text('Start'),
+                //       onPressed: !_hasSpeech || speech.isListening
+                //           ? null
+                //           : startListening,
+                //     ),
+                //     FlatButton(
+                //       child: Text('Stop'),
+                //       onPressed: speech.isListening ? stopListening : null,
+                //     ),
+                //     FlatButton(
+                //       child: Text('Cancel'),
+                //       onPressed: speech.isListening ? cancelListening : null,
+                //     ),
+                //   ],
+                // ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                //   children: <Widget>[
+                //     DropdownButton(
+                //       onChanged: (selectedVal) => _switchLang(selectedVal),
+                //       value: _currentLocaleId,
+                //       items: _localeNames
+                //           .map(
+                //             (localeName) => DropdownMenuItem(
+                //               value: localeName.localeId,
+                //               child: Text(localeName.name),
+                //             ),
+                //           )
+                //           .toList(),
+                //     ),
+                //   ],
+                // )
+            //   ],
+            // ),
           ),
           Expanded(
             flex: 4,
             child: Column(
               children: <Widget>[
-                Center(
-                  child: Text(
-                    'Recognized Words',
-                    style: TextStyle(fontSize: 22.0),
-                  ),
-                ),
+                // Center(
+                //   child: Text(
+                //     'Recognized Words',
+                //     style: TextStyle(fontSize: 22.0),
+                //   ),
+                // ),
                 Expanded(
                   child: Stack(
                     children: <Widget>[
                       Container(
-                        color: Theme.of(context).selectedRowColor,
+                        color: Colors.white,
                         child: Center(
                           child: Text(
                             lastWords,
@@ -139,19 +144,19 @@ class _Speech2TextState extends State<Speech2Text> {
                         ),
                       ),
                       Positioned.fill(
-                        bottom: 10,
+                        bottom: 20,
                         child: Align(
                           alignment: Alignment.bottomCenter,
                           child: Container(
-                            width: 40,
-                            height: 40,
+                            width: 70.0,
+                            height: 70.0,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               boxShadow: [
                                 BoxShadow(
                                     blurRadius: .26,
                                     spreadRadius: level * 1.5,
-                                    color: Colors.black.withOpacity(.05))
+                                    color: Colors.redAccent.withOpacity(.05))
                               ],
                               color: Colors.white,
                               borderRadius:
@@ -159,7 +164,9 @@ class _Speech2TextState extends State<Speech2Text> {
                             ),
                             child: IconButton(
                               icon: Icon(Icons.mic),
-                              onPressed: () => null,
+                              onPressed: !_hasSpeech || speech.isListening
+                                  ? stopListening
+                                  : startListening,
                             ),
                           ),
                         ),
@@ -167,40 +174,93 @@ class _Speech2TextState extends State<Speech2Text> {
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: <Widget>[
-                Center(
-                  child: Text(
-                    'Error Status',
-                    style: TextStyle(fontSize: 22.0),
-                  ),
-                ),
-                Center(
-                  child: Text(lastError),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            color: Theme.of(context).backgroundColor,
-            child: Center(
-              child: speech.isListening
-                  ? Text(
-                      "I'm listening...",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    )
-                  : Text(
-                      'Not listening',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(40),
+                              bottom: Radius.circular(5))),
+                      height: MediaQuery.of(context).size.height / 10,
+                      child: Row(children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: IconButton(
+                                    icon: Icon(
+                                      Icons.mic,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  Speech2Text()));
+                                    }),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: IconButton(
+                                    icon: Icon(Icons.text_fields,
+                                        color: Colors.white),
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  TextToSpeech()));
+                                    }),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ]),
                     ),
+                  )
+              ],
             ),
           ),
+          // Expanded(
+          //   flex: 1,
+          //   child: Column(
+          //     children: <Widget>[
+          //       Center(
+          //         child: Text(
+          //           'Error Status',
+          //           style: TextStyle(fontSize: 22.0),
+          //         ),
+          //       ),
+          //       Center(
+          //         child: Text(lastError),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // Container(
+          //   padding: EdgeInsets.symmetric(vertical: 20),
+          //   color: Theme.of(context).backgroundColor,
+          //   child: Center(
+          //     child: speech.isListening
+          //         ? Text(
+          //             "I'm listening...",
+          //             style: TextStyle(fontWeight: FontWeight.bold),
+          //           )
+          //         : Text(
+          //             'Not listening',
+          //             style: TextStyle(fontWeight: FontWeight.bold),
+          //           ),
+          //   ),
+          // ),
         ]),
       ),
     );
